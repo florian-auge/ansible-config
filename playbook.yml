@@ -1,0 +1,30 @@
+---
+- name: Configurer mon EC2
+  hosts: ec2
+  remote_user: ubuntu
+  vars:
+    docker_image: "florianauge/flask-app"
+    app_port: "5000"
+  tasks:
+    - name: Mettre à jour les packages
+      apt:
+        update_cache: yes
+      become: yes
+    - name: Installer Docker
+      apt:
+        name: docker.io
+        state: present
+      become: yes
+    - name: Supprimer l'ancien conteneur si existant
+      shell: docker rm -f flask-app
+      become: yes
+      ignore_errors: yes
+    - name: Lancer le conteneur Flask
+      shell: docker run -d -p {{ app_port }}:{{ app_port }} --name flask-app {{ docker_image }}
+      become: yes
+      ignore_errors: yes
+    - name: Activer Docker au démarrage
+      systemd:
+        name: docker
+        enabled: yes
+      become: yes
